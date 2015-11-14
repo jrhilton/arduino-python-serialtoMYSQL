@@ -1,0 +1,47 @@
+from serial import Serial
+import re
+import MySQLdb
+
+serial_pattern = r"L: (\d+)%(\d+\.\d*)%(\d+\.\d*)%(\d+)\n";
+serial_port = '/dev/ttyACM0';
+serial_bauds = 9600;
+
+#print "Opening serial port"
+s = Serial(serial_port, serial_bauds);
+#print "Reading first line from port"
+line = s.readline();
+#print "Initializing communication"
+#print line
+
+line = s.readline();
+m = re.match(serial_pattern, line);
+#print m.group(0);
+#print m.group(1);
+#print m.group(2);
+#print m.group(3);
+#print m.group(4);
+
+one = m.group(1);
+two = m.group(2);
+three = m.group(3);
+four = m.group(4);
+
+# Open database connection
+db = MySQLdb.connect("localhost","weather","weather","arduino" )
+# prepare a cursor object using cursor() method
+cursor = db.cursor()
+# Prepare SQL query to INSERT a record into the database.
+sql = "INSERT INTO data (f_one, f_two, f_three, f_four) \
+       VALUES ('%s', '%s', '%s', '%s')" % \
+       (one,two,three,four)
+try:
+   # Execute the SQL command
+   cursor.execute(sql)
+   # Commit your changes in the database
+   db.commit()
+except:
+   # Rollback in case there is any error
+   db.rollback()
+# disconnect from server
+db.close()
+
